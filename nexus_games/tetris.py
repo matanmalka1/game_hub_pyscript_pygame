@@ -188,7 +188,8 @@ def do_restart():
 
 def on_key(e):
     k=e.key
-    if k=="p" or k=="P": globals()['paused'] = not paused; return
+    if k=="p" or k=="P":
+        global paused; paused = not paused; return
     if k=="r" or k=="R": do_restart(); return
     if k==" ": e.preventDefault(); hard()
     elif k=="ArrowLeft" or k=="a": move(-1)
@@ -222,7 +223,7 @@ async def game_loop():
     loading.classList.add("hidden")
     await asyncio.sleep(.55)
     loading.style.display="none"
-    last=0
+    last=time.time()
     while True:
         now=time.time(); dt=now-last; last=now
         # Particles

@@ -179,8 +179,8 @@ async def game_loop():
         if bonus is not None:
             bonus_t-=dt
             if bonus_t<=0:
-                import builtins
-                globals()['bonus']=None
+                global bonus
+                bonus=None
         # Particles
         for p in particles: p["x"]+=p["vx"]*dt*60; p["y"]+=p["vy"]*dt*60; p["life"]-=dt*2.5
         particles[:]=[ p for p in particles if p["life"]>0]
