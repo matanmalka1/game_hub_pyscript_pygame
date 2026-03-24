@@ -220,43 +220,43 @@
       <div id="voice-log">🔇 Click the board to unlock voice</div>
       <div id="controls">
         <select id="difficulty-select">
-          <option value="rookie">Difficulty: Rookie</option>
-          <option value="easy">Difficulty: Easy</option>
-          <option value="even" selected>Difficulty: Even</option>
-          <option value="hard">Difficulty: Hard</option>
-          <option value="expert">Difficulty: Expert</option>
+          <option value="rookie">Level: Novice</option>
+          <option value="easy">Level: Casual</option>
+          <option value="even" selected>Level: Balanced</option>
+          <option value="hard">Level: Advanced</option>
+          <option value="expert">Level: Master</option>
         </select>
         <select id="player-select">
-          <option value="1">Play as X (1st)</option>
-          <option value="2">Play as O (2nd)</option>
+          <option value="1">Go first as X</option>
+          <option value="2">Go second as O</option>
         </select>
-        <button id="restart-btn">Restart</button>
+        <button id="restart-btn">New Round</button>
       </div>
 
       <!-- Training Panel -->
       <div id="train-panel">
-        <h3>🧠 Train AI Model In-Browser</h3>
+        <h3>🧠 Build Your AI Right Here</h3>
         <div class="train-row">
-          <label>Level</label>
+          <label>Difficulty</label>
           <select id="train-level">
-            <option value="rookie">Rookie</option>
-            <option value="easy">Easy</option>
-            <option value="even" selected>Even</option>
-            <option value="hard">Hard</option>
-            <option value="expert">Expert</option>
+            <option value="rookie">Novice</option>
+            <option value="easy">Casual</option>
+            <option value="even" selected>Balanced</option>
+            <option value="hard">Advanced</option>
+            <option value="expert">Master</option>
           </select>
-          <label>Epochs</label>
+          <label>Rounds</label>
           <select id="train-epochs">
             <option value="500">500</option>
             <option value="1000" selected>1 000</option>
             <option value="3000">3 000</option>
             <option value="5000">5 000</option>
           </select>
-          <button id="train-btn">▶ Train</button>
+          <button id="train-btn">▶ Run</button>
           <button id="export-btn" style="display: none">💾 Export .npy</button>
         </div>
         <div id="train-progress"><div id="train-progress-bar"></div></div>
-        <div id="train-log">Ready to train. Select level and click Train.</div>
+        <div id="train-log">Pick a difficulty and hit Run to begin.</div>
       </div>
     </div>
 
