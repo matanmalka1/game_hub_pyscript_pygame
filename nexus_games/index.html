@@ -727,12 +727,25 @@
     </footer>
 
     <script>
+      // Track visibility so off-screen previews don't burn CPU
+      const _visible = {};
+      const _observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((e) => {
+            _visible[e.target.id] = e.isIntersecting;
+          });
+        },
+        { threshold: 0.01 },
+      );
+
       function initCanvas(id) {
         const c = document.getElementById(id);
         if (!c) return null;
         const r = c.getBoundingClientRect();
         c.width = r.width || 270;
         c.height = r.height || 152;
+        _visible[id] = true;
+        _observer.observe(c);
         return [c, c.getContext("2d")];
       }
 
@@ -753,6 +766,10 @@
           food = { x: 12, y: 4 },
           t = 0;
         function tick() {
+          if (!_visible[c.id]) {
+            requestAnimationFrame(tick);
+            return;
+          }
           t++;
           if (t % 10 !== 0) {
             requestAnimationFrame(tick);
@@ -1011,6 +1028,7 @@
         let t = 0,
           flipped = 0;
         function tick() {
+          if (!_visible[c.id]) { requestAnimationFrame(tick); return; }
           t++;
           if (t % 120 === 0) flipped = (flipped + 1) % 2;
           x.fillStyle = "#02060e";
@@ -1069,6 +1087,7 @@
         const bw = W / 6,
           bh = H * 0.08;
         function tick() {
+          if (!_visible[c.id]) { requestAnimationFrame(tick); return; }
           t++;
           ball.x += ball.vx;
           ball.y += ball.vy;
@@ -1147,6 +1166,7 @@
               r,
             });
         function tick() {
+          if (!_visible[c.id]) { requestAnimationFrame(tick); return; }
           t++;
           if (t % 28 === 0)
             bullets.push({
@@ -1233,6 +1253,7 @@
           sq = (Math.min(W, H) * 0.85) / 3;
         const ox = (W - sq * 3) / 2;
         function tick() {
+          if (!_visible[c.id]) { requestAnimationFrame(tick); return; }
           t++;
           if (pause > 0) pause--;
           else if (mi < MOVES.length) {
@@ -1250,16 +1271,26 @@
             pause = 60;
           }
           // bg
-          x.fillStyle = "#040c20";
+          x.fillStyle = "#07090f";
           x.fillRect(0, 0, W, H);
           // board bg
-          x.fillStyle = "#0a1a40";
+          x.fillStyle = "rgba(255,255,255,0.06)";
           if (x.roundRect)
             (x.beginPath(),
               x.roundRect(ox - 2, top - 2, sq * 3 + 4, sq * 3 + 4, 8),
               x.fill());
+          // cell backgrounds
+          for (let r = 0; r < 3; r++)
+            for (let ci = 0; ci < 3; ci++) {
+              x.fillStyle = "rgba(255,255,255,0.08)";
+              if (x.roundRect) {
+                x.beginPath();
+                x.roundRect(ox + ci * sq + 3, top + r * sq + 3, sq - 6, sq - 6, 6);
+                x.fill();
+              }
+            }
           // grid lines
-          x.strokeStyle = "#1a3080";
+          x.strokeStyle = "rgba(255,255,255,0.25)";
           x.lineWidth = 2;
           for (let i = 1; i < 3; i++) {
             x.beginPath();
@@ -1278,7 +1309,9 @@
                 py = top + r * sq,
                 sp = sq * 0.22;
               if (board[r][ci] === 1) {
-                x.strokeStyle = "#ff3c6e";
+                x.strokeStyle = "#ff4d6d";
+                x.shadowColor = "rgba(255,77,109,0.45)";
+                x.shadowBlur = 10;
                 x.lineWidth = Math.max(2, sq * 0.15);
                 x.beginPath();
                 x.moveTo(px + sp, py + sp);
@@ -1288,12 +1321,16 @@
                 x.moveTo(px + sp, py + sq - sp);
                 x.lineTo(px + sq - sp, py + sp);
                 x.stroke();
+                x.shadowBlur = 0;
               } else if (board[r][ci] === 2) {
-                x.strokeStyle = "#4d8fff";
+                x.strokeStyle = "#00e5ff";
+                x.shadowColor = "rgba(0,229,255,0.45)";
+                x.shadowBlur = 10;
                 x.lineWidth = Math.max(2, sq * 0.1);
                 x.beginPath();
                 x.arc(px + sq / 2, py + sq / 2, sq * 0.28, 0, Math.PI * 2);
                 x.stroke();
+                x.shadowBlur = 0;
               }
             }
           requestAnimationFrame(tick);

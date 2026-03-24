@@ -17,8 +17,8 @@ SQ     = (W - MARGIN*2) // 3   # ≈ 104
 # Palette
 BG_TOP    = "#07090f"
 BG_BOT    = "#0d1528"
-GRID_COL  = "rgba(255,255,255,0.07)"
-CELL_BG   = "rgba(255,255,255,0.03)"
+GRID_COL  = "rgba(255,255,255,0.25)"
+CELL_BG   = "rgba(255,255,255,0.08)"
 X_COL     = "#ff4d6d"
 X_GLOW    = "rgba(255,77,109,0.45)"
 O_COL     = "#00e5ff"
@@ -70,6 +70,19 @@ def speak(text):
 # ── Drawing ──────────────────────────────────────────────────────────────
 _tick = 0   # animation counter
 
+def _rrect(x, y, w, h, r):
+    ctx.beginPath()
+    ctx.moveTo(x + r, y)
+    ctx.lineTo(x + w - r, y)
+    ctx.arcTo(x + w, y, x + w, y + r, r)
+    ctx.lineTo(x + w, y + h - r)
+    ctx.arcTo(x + w, y + h, x + w - r, y + h, r)
+    ctx.lineTo(x + r, y + h)
+    ctx.arcTo(x, y + h, x, y + h - r, r)
+    ctx.lineTo(x, y + r)
+    ctx.arcTo(x, y, x + r, y, r)
+    ctx.closePath()
+
 def _glow(color, blur=18):
     ctx.shadowColor = color
     ctx.shadowBlur  = blur
@@ -114,8 +127,7 @@ def draw():
 
     # subtle top panel separator
     ctx.fillStyle = "rgba(255,255,255,0.03)"
-    ctx.beginPath()
-    ctx.roundRect(MARGIN-4, 12, board_right - MARGIN + 8, OFFSET - 20, 12)
+    _rrect(MARGIN-4, 12, board_right - MARGIN + 8, OFFSET - 20, 12)
     ctx.fill()
 
     # status text
@@ -143,13 +155,13 @@ def draw():
 
     # score badges
     score_y = 72
-    for label, val, cx_off, color in [
+    for label, cx_off, color in [
         (f"YOU  {scores['human']}", -75, "#00e5ff"),
         (f"AI  {scores['ai']}",      75, "#ff4d6d"),
     ]:
         bx = W//2 + cx_off - 38
         ctx.fillStyle = "rgba(255,255,255,0.05)"
-        ctx.beginPath(); ctx.roundRect(bx, score_y-13, 76, 26, 8); ctx.fill()
+        _rrect(bx, score_y-13, 76, 26, 8); ctx.fill()
         ctx.fillStyle = color
         ctx.font      = "bold 13px 'Segoe UI', system-ui, sans-serif"
         ctx.fillText(label, W//2 + cx_off, score_y)
@@ -162,11 +174,10 @@ def draw():
     ctx.textAlign = "center"
 
     # ── board background ──
-    ctx.fillStyle = "rgba(255,255,255,0.04)"
-    ctx.beginPath()
-    ctx.roundRect(MARGIN-4, OFFSET-4, 3*SQ+8, 3*SQ+8, 14)
+    ctx.fillStyle = "rgba(255,255,255,0.06)"
+    _rrect(MARGIN-4, OFFSET-4, 3*SQ+8, 3*SQ+8, 14)
     ctx.fill()
-    ctx.strokeStyle = "rgba(255,255,255,0.08)"
+    ctx.strokeStyle = "rgba(255,255,255,0.20)"
     ctx.lineWidth   = 1
     ctx.stroke()
 
@@ -176,8 +187,7 @@ def draw():
             cx2 = MARGIN + c*SQ + 4
             cy  = OFFSET + r*SQ + 4
             ctx.fillStyle = CELL_BG
-            ctx.beginPath()
-            ctx.roundRect(cx2, cy, SQ-8, SQ-8, 8)
+            _rrect(cx2, cy, SQ-8, SQ-8, 8)
             ctx.fill()
 
     # ── grid lines ──
