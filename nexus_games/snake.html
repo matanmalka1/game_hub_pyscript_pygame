@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Snake — NEXUS ARCADE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://pyscript.net/releases/2024.1.1/core.css"
+    />
+    <script
+      type="module"
+      src="https://pyscript.net/releases/2024.1.1/core.js"
+    ></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      :root {
+        --bg: #05070d;
+        --surface: #0b0f1c;
+        --border: #1a2236;
+        --border2: #243050;
+        --accent: #00e87a;
+        --text: #cdd8f0;
+        --muted: #4a5878;
+        --muted2: #7888a8;
+      }
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: "Rajdhani", system-ui, sans-serif;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      /* ── Loading overlay — fades out ── */
+      #loading {
+        position: fixed;
+        inset: 0;
+        background: var(--bg);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 100;
+        gap: 16px;
+        transition: opacity 0.5s ease;
+      }
+      #loading.hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+      .spinner {
+        width: 40px;
+        height: 40px;
+        border: 2px solid var(--border2);
+        border-top-color: var(--accent);
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      .load-label {
+        font-family: "Share Tech Mono", monospace;
+        font-size: 13px;
+        color: var(--muted2);
+        letter-spacing: 2px;
+      }
+      .load-bar {
+        width: 200px;
+        height: 3px;
+        background: var(--border2);
+        border-radius: 2px;
+        overflow: hidden;
+      }
+      .load-fill {
+        height: 100%;
+        width: 0%;
+        background: var(--accent);
+        border-radius: 2px;
+        transition: width 0.3s ease;
+        animation: loadAnim 2s ease forwards;
+      }
+      @keyframes loadAnim {
+        0% {
+          width: 0%;
+        }
+        60% {
+          width: 75%;
+        }
+        100% {
+          width: 100%;
+        }
+      }
+
+      /* ── Top bar ── */
+      #top-bar {
+        width: 100%;
+        max-width: 480px;
+        padding: 14px 22px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border-bottom: 1px solid var(--border2);
+        background: rgba(5, 7, 13, 0.8);
+        backdrop-filter: blur(8px);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        opacity: 0;
+        animation: fadeDown 0.4s 0.1s ease both;
+      }
+      @keyframes fadeDown {
+        from {
+          opacity: 0;
+          transform: translateY(-8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      #back-link {
+        color: var(--muted2);
+        text-decoration: none;
+        font-size: 13px;
+        font-family: "Share Tech Mono", monospace;
+        letter-spacing: 0.5px;
+        transition: color 0.2s;
+      }
+      #back-link:hover {
+        color: var(--accent);
+      }
+      .sep {
+        color: var(--border2);
+        font-size: 12px;
+      }
+      #page-title {
+        font-size: 16px;
+        font-weight: 700;
+        letter-spacing: 1px;
+      }
+
+      /* ── Game wrapper — fades in ── */
+      #game-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 20px 16px;
+        gap: 14px;
+        width: 100%;
+        opacity: 0;
+        animation: fadeUp 0.5s 0.15s ease both;
+      }
+      @keyframes fadeUp {
+        from {
+          opacity: 0;
+          transform: translateY(12px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* ── HUD ── */
+      #score-bar {
+        display: flex;
+        gap: 6px;
+        background: var(--surface);
+        border: 1px solid var(--border2);
+        border-radius: 10px;
+        padding: 10px 20px;
+      }
+      .hud-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+        padding: 0 14px;
+      }
+      .hud-item + .hud-item {
+        border-left: 1px solid var(--border2);
+      }
+      .hud-label {
+        font-size: 10px;
+        color: var(--muted2);
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        font-family: "Share Tech Mono", monospace;
+      }
+      .hud-val {
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--accent);
+        font-family: "Share Tech Mono", monospace;
+        line-height: 1;
+      }
+
+      /* ── Canvas ── */
+      canvas {
+        display: block;
+        border-radius: 12px;
+        touch-action: none;
+        border: 1px solid var(--border2);
+        box-shadow: 0 0 30px rgba(0, 232, 122, 0.08);
+      }
+
+      /* ── D-pad ── */
+      #dpad {
+        display: grid;
+        grid-template-columns: repeat(3, 52px);
+        grid-template-rows: repeat(3, 52px);
+        gap: 5px;
+        touch-action: none;
+      }
+      .dpad-btn {
+        background: var(--surface);
+        border: 1px solid var(--border2);
+        border-radius: 10px;
+        color: var(--text);
+        font-size: 18px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-tap-highlight-color: transparent;
+        user-select: none;
+        transition: all 0.1s;
+      }
+      .dpad-btn:active {
+        background: var(--accent);
+        color: #000;
+        border-color: var(--accent);
+        transform: scale(0.92);
+      }
+      .dpad-center {
+        background: transparent;
+        border-color: transparent;
+      }
+
+      /* ── Hint ── */
+      .hint {
+        font-size: 11px;
+        color: var(--muted);
+        text-align: center;
+        font-family: "Share Tech Mono", monospace;
+        letter-spacing: 0.5px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="loading">
+      <div class="spinner"></div>
+      <div class="load-label">LOADING PYTHON</div>
+      <div class="load-bar"><div class="load-fill"></div></div>
+    </div>
+
+    <div id="top-bar">
+      <a id="back-link" href="index.html">← BACK</a>
+      <span class="sep">|</span>
+      <span id="page-title">Snake</span>
+    </div>
+
+    <div id="game-wrapper">
+      <div id="score-bar">
+        <div class="hud-item">
+          <div class="hud-label">Score</div>
+          <div class="hud-val" id="score-val">0</div>
+        </div>
+        <div class="hud-item">
+          <div class="hud-label">Best</div>
+          <div class="hud-val" id="best-val">0</div>
+        </div>
+      </div>
+      <canvas id="gameCanvas" width="320" height="320"></canvas>
+      <div id="dpad">
+        <div></div>
+        <div class="dpad-btn" id="btn-up">▲</div>
+        <div></div>
+        <div class="dpad-btn" id="btn-left">◀</div>
+        <div class="dpad-center dpad-btn"></div>
+        <div class="dpad-btn" id="btn-right">▶</div>
+        <div></div>
+        <div class="dpad-btn" id="btn-down">▼</div>
+        <div></div>
+      </div>
+      <div class="hint">
+        Arrow / WASD / D-pad · Space or tap to start · R reset
+      </div>
+    </div>
+
+    <script type="py" src="snake.py"></script>
+  </body>
+</html>

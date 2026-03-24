@@ -1,0 +1,1305 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NEXUS ARCADE — Python Browser Games</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      *,
+      *::before,
+      *::after {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      :root {
+        --bg: #05070d;
+        --surface: #0b0f1c;
+        --surface2: #111828;
+        --border: #1a2236;
+        --border2: #243050;
+        --accent: #00e87a;
+        --accent2: #4d8fff;
+        --accent3: #ff3c6e;
+        --text: #cdd8f0;
+        --muted: #4a5878;
+        --muted2: #7888a8;
+        --glow-g: rgba(0, 232, 122, 0.18);
+        --glow-b: rgba(77, 143, 255, 0.18);
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: "Rajdhani", system-ui, sans-serif;
+        min-height: 100vh;
+        overflow-x: hidden;
+      }
+
+      /* ── Scanlines overlay ── */
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 999;
+        background: repeating-linear-gradient(
+          0deg,
+          transparent,
+          transparent 2px,
+          rgba(0, 0, 0, 0.06) 2px,
+          rgba(0, 0, 0, 0.06) 4px
+        );
+      }
+
+      /* ── Animated BG grid ── */
+      .bg-grid {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 0;
+        background-image:
+          linear-gradient(rgba(77, 143, 255, 0.04) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(77, 143, 255, 0.04) 1px, transparent 1px);
+        background-size: 44px 44px;
+        animation: gridPan 30s linear infinite;
+      }
+      @keyframes gridPan {
+        to {
+          background-position: 44px 44px;
+        }
+      }
+
+      /* ── Glow orbs ── */
+      .orb {
+        position: fixed;
+        border-radius: 50%;
+        pointer-events: none;
+        z-index: 0;
+        filter: blur(80px);
+        opacity: 0.35;
+      }
+      .orb-1 {
+        width: 500px;
+        height: 500px;
+        background: var(--accent);
+        top: -180px;
+        right: -100px;
+        animation: orbFloat1 12s ease-in-out infinite;
+      }
+      .orb-2 {
+        width: 420px;
+        height: 420px;
+        background: var(--accent2);
+        bottom: -150px;
+        left: -120px;
+        animation: orbFloat2 15s ease-in-out infinite;
+      }
+      .orb-3 {
+        width: 300px;
+        height: 300px;
+        background: var(--accent3);
+        top: 40%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        animation: orbFloat3 10s ease-in-out infinite;
+      }
+      @keyframes orbFloat1 {
+        0%,
+        100% {
+          transform: translate(0, 0);
+        }
+        50% {
+          transform: translate(-30px, 40px);
+        }
+      }
+      @keyframes orbFloat2 {
+        0%,
+        100% {
+          transform: translate(0, 0);
+        }
+        50% {
+          transform: translate(40px, -30px);
+        }
+      }
+      @keyframes orbFloat3 {
+        0%,
+        100% {
+          transform: translate(-50%, -50%) scale(1);
+        }
+        50% {
+          transform: translate(-50%, -50%) scale(1.2);
+        }
+      }
+
+      /* ── Header ── */
+      header {
+        position: relative;
+        z-index: 10;
+        border-bottom: 1px solid var(--border2);
+        padding: 16px 40px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        background: rgba(5, 7, 13, 0.7);
+        backdrop-filter: blur(12px);
+        animation: fadeDown 0.5s ease both;
+      }
+      @keyframes fadeDown {
+        from {
+          opacity: 0;
+          transform: translateY(-12px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .logo {
+        width: 42px;
+        height: 42px;
+        background: linear-gradient(135deg, var(--accent), var(--accent2));
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        flex-shrink: 0;
+        box-shadow: 0 0 20px var(--glow-g);
+      }
+      .logo-text {
+        font-size: 22px;
+        font-weight: 700;
+        letter-spacing: 2px;
+        font-family: "Share Tech Mono", monospace;
+      }
+      .logo-text span {
+        color: var(--accent);
+      }
+      .tagline {
+        margin-left: auto;
+        color: var(--muted2);
+        font-size: 12px;
+        letter-spacing: 1px;
+        font-family: "Share Tech Mono", monospace;
+      }
+      .header-status {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11px;
+        color: var(--accent);
+        font-family: "Share Tech Mono", monospace;
+      }
+      .dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--accent);
+        animation: pulse 2s ease-in-out infinite;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+          box-shadow: 0 0 0 0 var(--glow-g);
+        }
+        50% {
+          opacity: 0.6;
+          box-shadow: 0 0 0 5px transparent;
+        }
+      }
+
+      /* ── Hero ── */
+      .hero {
+        position: relative;
+        z-index: 10;
+        text-align: center;
+        padding: 64px 20px 48px;
+        animation: fadeUp 0.6s 0.1s ease both;
+      }
+      @keyframes fadeUp {
+        from {
+          opacity: 0;
+          transform: translateY(16px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .hero-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-family: "Share Tech Mono", monospace;
+        font-size: 11px;
+        letter-spacing: 3px;
+        color: var(--accent);
+        text-transform: uppercase;
+        margin-bottom: 20px;
+        padding: 5px 14px;
+        border: 1px solid rgba(0, 232, 122, 0.3);
+        border-radius: 20px;
+        background: rgba(0, 232, 122, 0.07);
+      }
+      .hero h1 {
+        font-size: clamp(32px, 6vw, 62px);
+        font-weight: 700;
+        line-height: 1.1;
+        letter-spacing: -1px;
+        margin-bottom: 16px;
+      }
+      .hero h1 .line1 {
+        display: block;
+        background: linear-gradient(90deg, #fff 0%, var(--text) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      .hero h1 .line2 {
+        display: block;
+        background: linear-gradient(90deg, var(--accent), var(--accent2));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      .hero p {
+        color: var(--muted2);
+        font-size: 15px;
+        max-width: 440px;
+        margin: 0 auto 28px;
+        line-height: 1.6;
+        letter-spacing: 0.3px;
+      }
+      .hero-stats {
+        display: flex;
+        justify-content: center;
+        gap: 32px;
+        flex-wrap: wrap;
+      }
+      .stat {
+        text-align: center;
+      }
+      .stat-n {
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--accent);
+        font-family: "Share Tech Mono", monospace;
+        line-height: 1;
+      }
+      .stat-l {
+        font-size: 11px;
+        color: var(--muted2);
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        margin-top: 4px;
+      }
+
+      /* ── Section label ── */
+      .section-label {
+        position: relative;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        max-width: 1140px;
+        margin: 0 auto;
+        padding: 0 28px 20px;
+        font-family: "Share Tech Mono", monospace;
+        font-size: 11px;
+        letter-spacing: 3px;
+        color: var(--muted2);
+        text-transform: uppercase;
+      }
+      .section-label::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: linear-gradient(90deg, var(--border2), transparent);
+      }
+
+      /* ── Grid ── */
+      .games-grid {
+        position: relative;
+        z-index: 10;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+        gap: 20px;
+        max-width: 1140px;
+        margin: 0 auto;
+        padding: 0 28px 80px;
+      }
+
+      /* ── Card ── */
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--border2);
+        border-radius: 16px;
+        overflow: hidden;
+        text-decoration: none;
+        color: inherit;
+        display: flex;
+        flex-direction: column;
+        transition:
+          transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1),
+          border-color 0.22s,
+          box-shadow 0.22s;
+        cursor: pointer;
+        opacity: 0;
+        animation: cardIn 0.5s ease both;
+      }
+      .card:nth-child(1) {
+        animation-delay: 0.05s;
+      }
+      .card:nth-child(2) {
+        animation-delay: 0.12s;
+      }
+      .card:nth-child(3) {
+        animation-delay: 0.19s;
+      }
+      .card:nth-child(4) {
+        animation-delay: 0.26s;
+      }
+      .card:nth-child(5) {
+        animation-delay: 0.33s;
+      }
+      .card:nth-child(6) {
+        animation-delay: 0.4s;
+      }
+      .card:nth-child(7) {
+        animation-delay: 0.47s;
+      }
+      @keyframes cardIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px) scale(0.97);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      .card:hover {
+        transform: translateY(-6px) scale(1.01);
+        border-color: var(--accent);
+        box-shadow:
+          0 12px 40px rgba(0, 232, 122, 0.15),
+          0 0 0 1px rgba(0, 232, 122, 0.1);
+      }
+      .card:hover .card-preview::after {
+        opacity: 1;
+      }
+      .card:hover .play-btn {
+        background: linear-gradient(135deg, var(--accent), #00c06a);
+        color: #000;
+        transform: scale(1.05);
+      }
+
+      .card-preview {
+        width: 100%;
+        aspect-ratio: 16/9;
+        position: relative;
+        overflow: hidden;
+        background: linear-gradient(135deg, #040810, #0a0f1e);
+      }
+      .card-preview::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          to bottom,
+          transparent 60%,
+          rgba(0, 232, 122, 0.08)
+        );
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+      .card-preview canvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+
+      .badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        padding: 3px 9px;
+        border-radius: 20px;
+        font-family: "Share Tech Mono", monospace;
+      }
+      .badge-new {
+        background: rgba(0, 232, 122, 0.15);
+        color: var(--accent);
+        border: 1px solid rgba(0, 232, 122, 0.4);
+      }
+      .badge-ai {
+        background: rgba(77, 143, 255, 0.15);
+        color: var(--accent2);
+        border: 1px solid rgba(77, 143, 255, 0.4);
+      }
+
+      .card-body {
+        padding: 16px 18px 18px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .card-title {
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+      }
+      .card-desc {
+        font-size: 13px;
+        color: var(--muted2);
+        line-height: 1.55;
+        flex: 1;
+      }
+      .card-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 12px;
+      }
+      .card-tags {
+        display: flex;
+        gap: 5px;
+        flex-wrap: wrap;
+      }
+      .tag {
+        font-size: 10px;
+        padding: 2px 8px;
+        border-radius: 20px;
+        background: rgba(77, 143, 255, 0.09);
+        color: var(--accent2);
+        border: 1px solid rgba(77, 143, 255, 0.2);
+        letter-spacing: 0.5px;
+        font-family: "Share Tech Mono", monospace;
+      }
+      .play-btn {
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        padding: 6px 16px;
+        border-radius: 8px;
+        background: var(--surface2);
+        color: var(--text);
+        border: 1px solid var(--border2);
+        cursor: pointer;
+        transition: all 0.2s;
+        font-family: "Share Tech Mono", monospace;
+      }
+
+      /* ── Footer ── */
+      footer {
+        position: relative;
+        z-index: 10;
+        border-top: 1px solid var(--border);
+        text-align: center;
+        padding: 22px;
+        color: var(--muted);
+        font-size: 12px;
+        background: rgba(5, 7, 13, 0.5);
+        font-family: "Share Tech Mono", monospace;
+        letter-spacing: 0.5px;
+      }
+      footer span {
+        color: var(--accent);
+      }
+
+      /* ── Scrollbar ── */
+      ::-webkit-scrollbar {
+        width: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: var(--bg);
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--border2);
+        border-radius: 3px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: var(--accent);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="bg-grid"></div>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+
+    <header>
+      <div class="logo">🕹️</div>
+      <div class="logo-text">NEXUS<span>ARCADE</span></div>
+      <div class="header-status"><span class="dot"></span>LIVE</div>
+      <span class="tagline">Python · PyScript · No Install</span>
+    </header>
+
+    <div class="hero">
+      <div class="hero-eyebrow">⚡ Browser-Native Gaming</div>
+      <h1>
+        <span class="line1">8 Games.</span>
+        <span class="line2">Pure Python.</span>
+      </h1>
+      <p>
+        PyScript-powered arcade — full game logic in Python, canvas rendering at
+        60fps. No downloads, no plugins.
+      </p>
+      <div class="hero-stats">
+        <div class="stat">
+          <div class="stat-n">8</div>
+          <div class="stat-l">Games</div>
+        </div>
+        <div class="stat">
+          <div class="stat-n">60</div>
+          <div class="stat-l">FPS</div>
+        </div>
+        <div class="stat">
+          <div class="stat-n">0</div>
+          <div class="stat-l">Install</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-label">⚡ AI Games</div>
+    <div class="games-grid" style="padding-bottom: 28px">
+      <a class="card" href="tictactoe.html">
+        <div class="card-preview">
+          <canvas id="tttPrev"></canvas
+          ><span class="badge badge-ai">AI · Train</span>
+        </div>
+        <div class="card-body">
+          <div class="card-title">Tic-Tac-Toe</div>
+          <div class="card-desc">
+            Play vs a neural network AI. Train models in-browser by difficulty
+            from Rookie to Unbeatable.
+          </div>
+          <div class="card-footer">
+            <div class="card-tags">
+              <span class="tag">Strategy</span
+              ><span class="tag">Neural Net</span>
+            </div>
+            <button class="play-btn">Play ▶</button>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <div class="section-label">🕹️ Arcade Games</div>
+    <div class="games-grid">
+      <a class="card" href="snake.html">
+        <div class="card-preview">
+          <canvas id="snakePrev"></canvas
+          ><span class="badge badge-new">Classic</span>
+        </div>
+        <div class="card-body">
+          <div class="card-title">Snake</div>
+          <div class="card-desc">
+            Eat, grow, survive. Arrow keys or swipe. How long before you crash?
+          </div>
+          <div class="card-footer">
+            <div class="card-tags">
+              <span class="tag">Classic</span><span class="tag">Arcade</span>
+            </div>
+            <button class="play-btn">Play ▶</button>
+          </div>
+        </div>
+      </a>
+      <a class="card" href="tetris.html">
+        <div class="card-preview">
+          <canvas id="tetrisPrev"></canvas
+          ><span class="badge badge-new">Classic</span>
+        </div>
+        <div class="card-body">
+          <div class="card-title">Tetris</div>
+          <div class="card-desc">
+            All 7 tetrominoes, ghost piece, hard drop, levels, and line scoring.
+            Clear lines before it tops out.
+          </div>
+          <div class="card-footer">
+            <div class="card-tags">
+              <span class="tag">Puzzle</span><span class="tag">Classic</span>
+            </div>
+            <button class="play-btn">Play ▶</button>
+          </div>
+        </div>
+      </a>
+      <a class="card" href="game2048.html">
+        <div class="card-preview">
+          <canvas id="g2048Prev"></canvas
+          ><span class="badge badge-new">Puzzle</span>
+        </div>
+        <div class="card-body">
+          <div class="card-title">2048</div>
+          <div class="card-desc">
+            Slide and merge tiles to reach 2048. Undo support, smooth controls,
+            infinite replayability.
+          </div>
+          <div class="card-footer">
+            <div class="card-tags">
+              <span class="tag">Puzzle</span><span class="tag">Strategy</span>
+            </div>
+            <button class="play-btn">Play ▶</button>
+          </div>
+        </div>
+      </a>
+      <a class="card" href="memory.html">
+        <div class="card-preview">
+          <canvas id="memPrev"></canvas
+          ><span class="badge badge-new">Brain</span>
+        </div>
+        <div class="card-body">
+          <div class="card-title">Memory</div>
+          <div class="card-desc">
+            Flip cards and find all 8 matching pairs in the fewest moves. Tracks
+            your personal best.
+          </div>
+          <div class="card-footer">
+            <div class="card-tags">
+              <span class="tag">Memory</span><span class="tag">Brain</span>
+            </div>
+            <button class="play-btn">Play ▶</button>
+          </div>
+        </div>
+      </a>
+      <a class="card" href="breakout.html">
+        <div class="card-preview">
+          <canvas id="breakoutPrev"></canvas
+          ><span class="badge badge-new">Arcade</span>
+        </div>
+        <div class="card-body">
+          <div class="card-title">Breakout</div>
+          <div class="card-desc">
+            Bounce the ball, shatter bricks, rack up points. 3 levels of
+            increasing speed.
+          </div>
+          <div class="card-footer">
+            <div class="card-tags">
+              <span class="tag">Classic</span><span class="tag">Arcade</span>
+            </div>
+            <button class="play-btn">Play ▶</button>
+          </div>
+        </div>
+      </a>
+      <a class="card" href="invaders.html">
+        <div class="card-preview">
+          <canvas id="invadersPrev"></canvas
+          ><span class="badge badge-new">Shooter</span>
+        </div>
+        <div class="card-body">
+          <div class="card-title">Space Invaders</div>
+          <div class="card-desc">
+            Defend Earth from descending alien waves. Shoot fast, dodge their
+            fire, clear all 5 waves.
+          </div>
+          <div class="card-footer">
+            <div class="card-tags">
+              <span class="tag">Shooter</span><span class="tag">Arcade</span>
+            </div>
+            <button class="play-btn">Play ▶</button>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <footer>
+      NEXUS ARCADE — 8 browser games in <span>pure Python</span> with PyScript
+      &amp; HTML Canvas
+    </footer>
+
+    <script>
+      function initCanvas(id) {
+        const c = document.getElementById(id);
+        if (!c) return null;
+        const r = c.getBoundingClientRect();
+        c.width = r.width || 270;
+        c.height = r.height || 152;
+        return [c, c.getContext("2d")];
+      }
+
+      // ── Snake preview ──
+      (function () {
+        const res = initCanvas("snakePrev");
+        if (!res) return;
+        const [c, x] = res;
+        const W = c.width,
+          H = c.height,
+          SZ = 14;
+        let snake = [
+            { x: 8, y: 5 },
+            { x: 7, y: 5 },
+            { x: 6, y: 5 },
+          ],
+          dir = { x: 1, y: 0 },
+          food = { x: 12, y: 4 },
+          t = 0;
+        function tick() {
+          t++;
+          if (t % 10 !== 0) {
+            requestAnimationFrame(tick);
+            return;
+          }
+          const h = { x: snake[0].x + dir.x, y: snake[0].y + dir.y };
+          if (h.x < 0 || h.x >= W / SZ || h.y < 0 || h.y >= H / SZ) {
+            snake = [
+              { x: 8, y: 5 },
+              { x: 7, y: 5 },
+              { x: 6, y: 5 },
+            ];
+            dir = { x: 1, y: 0 };
+          } else {
+            snake.unshift(h);
+            if (h.x === food.x && h.y === food.y) {
+              food = {
+                x: Math.floor(Math.random() * Math.floor(W / SZ)),
+                y: Math.floor(Math.random() * Math.floor(H / SZ)),
+              };
+            } else snake.pop();
+          }
+          if (t % 40 === 0) {
+            const d = [
+              { x: 1, y: 0 },
+              { x: 0, y: 1 },
+              { x: -1, y: 0 },
+              { x: 0, y: -1 },
+            ];
+            const nd = d[Math.floor(Math.random() * 4)];
+            if (nd.x != -dir.x && nd.y != -dir.y) dir = nd;
+          }
+          x.fillStyle = "#02060e";
+          x.fillRect(0, 0, W, H);
+          x.strokeStyle = "rgba(0,255,136,.04)";
+          x.lineWidth = 0.5;
+          for (let i = 0; i < W; i += SZ) {
+            x.beginPath();
+            x.moveTo(i, 0);
+            x.lineTo(i, H);
+            x.stroke();
+          }
+          for (let i = 0; i < H; i += SZ) {
+            x.beginPath();
+            x.moveTo(0, i);
+            x.lineTo(W, i);
+            x.stroke();
+          }
+          x.fillStyle = "#ff2d6e";
+          x.shadowColor = "#ff2d6e";
+          x.shadowBlur = 8;
+          x.beginPath();
+          x.arc(
+            food.x * SZ + SZ / 2,
+            food.y * SZ + SZ / 2,
+            SZ / 2 - 2,
+            0,
+            Math.PI * 2,
+          );
+          x.fill();
+          x.shadowBlur = 0;
+          snake.forEach((s, i) => {
+            x.fillStyle = i === 0 ? "#00ff88" : i < 3 ? "#00cc70" : "#009950";
+            x.shadowColor = i === 0 ? "#00ff88" : "transparent";
+            x.shadowBlur = i === 0 ? 6 : 0;
+            x.fillRect(s.x * SZ + 2, s.y * SZ + 2, SZ - 4, SZ - 4);
+          });
+          x.shadowBlur = 0;
+          requestAnimationFrame(tick);
+        }
+        tick();
+      })();
+
+      // ── Tetris preview ──
+      (function () {
+        const res = initCanvas("tetrisPrev");
+        if (!res) return;
+        const [c, x] = res;
+        const W = c.width,
+          H = c.height,
+          BS = 16;
+        const COLS = [
+          "#00f0ff",
+          "#ffe066",
+          "#bf5fff",
+          "#ff8c00",
+          "#00ff88",
+          "#ff2d6e",
+        ];
+        const pieces = [
+          [[1, 1, 1, 1]],
+          [
+            [1, 1],
+            [1, 1],
+          ],
+          [
+            [0, 1, 0],
+            [1, 1, 1],
+          ],
+          [
+            [1, 1, 0],
+            [0, 1, 1],
+          ],
+        ];
+        let piece = { s: pieces[0], c: COLS[0], px: 2, py: 0 },
+          t = 0,
+          stack = [];
+        function tick() {
+          t++;
+          if (t % 16 !== 0) {
+            requestAnimationFrame(tick);
+            return;
+          }
+          piece.py++;
+          if (piece.py * BS > H - piece.s.length * BS) {
+            piece.s.forEach((row, r) =>
+              row.forEach((v, col) => {
+                if (v)
+                  stack.push({
+                    x: (piece.px + col) * BS,
+                    y: (piece.py + r) * BS,
+                    c: piece.c,
+                  });
+              }),
+            );
+            if (stack.length > 40) stack = stack.slice(-20);
+            piece = {
+              s: pieces[Math.floor(Math.random() * pieces.length)],
+              c: COLS[Math.floor(Math.random() * COLS.length)],
+              px: Math.floor(Math.random() * (W / BS - 3)),
+              py: 0,
+            };
+          }
+          x.fillStyle = "#02060e";
+          x.fillRect(0, 0, W, H);
+          x.strokeStyle = "rgba(255,45,110,.04)";
+          x.lineWidth = 0.5;
+          for (let i = 0; i < W; i += BS) {
+            x.beginPath();
+            x.moveTo(i, 0);
+            x.lineTo(i, H);
+            x.stroke();
+          }
+          for (let i = 0; i < H; i += BS) {
+            x.beginPath();
+            x.moveTo(0, i);
+            x.lineTo(W, i);
+            x.stroke();
+          }
+          stack.forEach((b) => {
+            x.fillStyle = b.c;
+            x.fillRect(b.x + 1, b.y + 1, BS - 2, BS - 2);
+          });
+          piece.s.forEach((row, r) =>
+            row.forEach((v, col) => {
+              if (v) {
+                x.fillStyle = piece.c;
+                x.shadowColor = piece.c;
+                x.shadowBlur = 6;
+                x.fillRect(
+                  (piece.px + col) * BS + 1,
+                  (piece.py + r) * BS + 1,
+                  BS - 2,
+                  BS - 2,
+                );
+                x.shadowBlur = 0;
+              }
+            }),
+          );
+          requestAnimationFrame(tick);
+        }
+        tick();
+      })();
+
+      // ── 2048 preview ──
+      (function () {
+        const res = initCanvas("g2048Prev");
+        if (!res) return;
+        const [c, x] = res;
+        const W = c.width,
+          H = c.height;
+        const vals = [
+          [2, 4, 8, 16],
+          [32, 64, 128, 256],
+          [2, 4, 8, 16],
+          [32, 64, 0, 0],
+        ];
+        const COLS = {
+          0: "#1c2444",
+          2: "#28406e",
+          4: "#325082",
+          8: "#ff8c00",
+          16: "#ff6400",
+          32: "#ff3c00",
+          64: "#ff2000",
+          128: "#bf5fff",
+          256: "#a030ff",
+        };
+        const gs = Math.min(W, H) / 5,
+          gap = 4,
+          ox = (W - 4 * (gs + gap)) / 2,
+          oy = (H - 4 * (gs + gap)) / 2;
+        x.fillStyle = "#02060e";
+        x.fillRect(0, 0, W, H);
+        vals.forEach((row, r) =>
+          row.forEach((v, col) => {
+            x.fillStyle = COLS[v] || "#ffe050";
+            if (x.roundRect)
+              (x.beginPath(),
+                x.roundRect(
+                  ox + col * (gs + gap),
+                  oy + r * (gs + gap),
+                  gs,
+                  gs,
+                  4,
+                ),
+                x.fill());
+            else x.fillRect(ox + col * (gs + gap), oy + r * (gs + gap), gs, gs);
+            if (v) {
+              x.fillStyle = "#fff";
+              x.font = `bold ${gs * 0.32}px monospace`;
+              x.textAlign = "center";
+              x.textBaseline = "middle";
+              x.fillText(
+                v,
+                ox + col * (gs + gap) + gs / 2,
+                oy + r * (gs + gap) + gs / 2,
+              );
+            }
+          }),
+        );
+      })();
+
+      // ── Memory preview ──
+      (function () {
+        const res = initCanvas("memPrev");
+        if (!res) return;
+        const [c, x] = res;
+        const W = c.width,
+          H = c.height;
+        const cols = [
+          "#00f0ff",
+          "#ff2d6e",
+          "#ffe066",
+          "#bf5fff",
+          "#00ff88",
+          "#ff8c00",
+          "#00f0ff",
+          "#ff2d6e",
+        ];
+        const syms = ["★", "♦", "♠", "♣", "♥", "⬟", "★", "♦"];
+        const gs = Math.min(W / 4, H / 2) - 8,
+          gap = 7,
+          ox = (W - 4 * (gs + gap)) / 2,
+          oy = (H - 2 * (gs + gap)) / 2;
+        let t = 0,
+          flipped = 0;
+        function tick() {
+          t++;
+          if (t % 120 === 0) flipped = (flipped + 1) % 2;
+          x.fillStyle = "#02060e";
+          x.fillRect(0, 0, W, H);
+          syms.forEach((s, i) => {
+            const col = i % 4,
+              row = Math.floor(i / 4);
+            const bx = ox + col * (gs + gap),
+              by = oy + row * (gs + gap);
+            const show =
+              (i < 4 && flipped === 0) ||
+              (i >= 4 && flipped === 1) ||
+              i === 2 ||
+              i === 6;
+            x.fillStyle = show ? "#1a2260" : "#141e3c";
+            if (x.roundRect)
+              (x.beginPath(), x.roundRect(bx, by, gs, gs, 6), x.fill());
+            else x.fillRect(bx, by, gs, gs);
+            x.strokeStyle = show ? cols[i] : "#2a3a70";
+            x.lineWidth = 1.5;
+            if (x.roundRect)
+              (x.beginPath(), x.roundRect(bx, by, gs, gs, 6), x.stroke());
+            if (show) {
+              x.fillStyle = cols[i];
+              x.font = `${gs * 0.46}px serif`;
+              x.textAlign = "center";
+              x.textBaseline = "middle";
+              x.fillText(s, bx + gs / 2, by + gs / 2);
+            } else {
+              x.fillStyle = "#3a4a80";
+              x.font = `${gs * 0.38}px monospace`;
+              x.textAlign = "center";
+              x.textBaseline = "middle";
+              x.fillText("?", bx + gs / 2, by + gs / 2);
+            }
+          });
+          requestAnimationFrame(tick);
+        }
+        tick();
+      })();
+
+      // ── Breakout preview ──
+      (function () {
+        const res = initCanvas("breakoutPrev");
+        if (!res) return;
+        const [c, x] = res;
+        const W = c.width,
+          H = c.height;
+        const rows = [
+          ["#ff4466", "#ff6688", "#ff4466", "#ff6688", "#ff4466"],
+          ["#ff8844", "#ffaa66", "#ff8844", "#ffaa66", "#ff8844"],
+          ["#ffcc44", "#ffdd88", "#ffcc44", "#ffdd88", "#ffcc44"],
+        ];
+        let ball = { x: W / 2, y: H * 0.6, vx: 2.2, vy: -2 },
+          t = 0;
+        const bw = W / 6,
+          bh = H * 0.08;
+        function tick() {
+          t++;
+          ball.x += ball.vx;
+          ball.y += ball.vy;
+          if (ball.x < 6 || ball.x > W - 6) ball.vx *= -1;
+          if (ball.y < 6) ball.vy = Math.abs(ball.vy);
+          const px = W / 2 + Math.sin(t * 0.03) * W * 0.32;
+          if (
+            ball.vy > 0 &&
+            Math.abs(ball.y - H * 0.83) < 10 &&
+            Math.abs(ball.x - px) < W * 0.17
+          ) {
+            ball.vy = -Math.abs(ball.vy);
+            ball.vx = ((ball.x - px) / (W * 0.17)) * 3;
+          }
+          if (ball.y > H) {
+            ball.y = H * 0.6;
+            ball.x = W / 2;
+            ball.vx = 2.2;
+            ball.vy = -2;
+          }
+          x.fillStyle = "#07090f";
+          x.fillRect(0, 0, W, H);
+          x.strokeStyle = "rgba(77,143,255,.05)";
+          x.lineWidth = 0.5;
+          for (let i = 0; i < W; i += 22) {
+            x.beginPath();
+            x.moveTo(i, 0);
+            x.lineTo(i, H);
+            x.stroke();
+          }
+          rows.forEach((row, r) =>
+            row.forEach((col, ci) => {
+              const bx = (W - 5 * (bw + 3)) / 2 + ci * (bw + 3),
+                by = H * 0.07 + r * (bh + 3);
+              x.fillStyle = col;
+              if (x.roundRect)
+                (x.beginPath(), x.roundRect(bx, by, bw, bh, 3), x.fill());
+              else x.fillRect(bx, by, bw, bh);
+            }),
+          );
+          x.fillStyle = "#00e87a";
+          x.shadowColor = "#00e87a";
+          x.shadowBlur = 10;
+          if (x.roundRect)
+            (x.beginPath(),
+              x.roundRect(px - W * 0.15, H * 0.81, W * 0.3, H * 0.045, 4),
+              x.fill());
+          x.shadowBlur = 0;
+          x.fillStyle = "white";
+          x.shadowColor = "rgba(255,255,255,.7)";
+          x.shadowBlur = 8;
+          x.beginPath();
+          x.arc(ball.x, ball.y, 5, 0, Math.PI * 2);
+          x.fill();
+          x.shadowBlur = 0;
+          requestAnimationFrame(tick);
+        }
+        tick();
+      })();
+
+      // ── Invaders preview ──
+      (function () {
+        const res = initCanvas("invadersPrev");
+        if (!res) return;
+        const [c, x] = res;
+        const W = c.width,
+          H = c.height;
+        let t = 0,
+          bullets = [];
+        const aliens = [];
+        for (let r = 0; r < 3; r++)
+          for (let ci = 0; ci < 6; ci++)
+            aliens.push({
+              x: ci * (W / 7) + W / 14,
+              y: r * (H / 7) + H * 0.1,
+              r,
+            });
+        function tick() {
+          t++;
+          if (t % 28 === 0)
+            bullets.push({
+              x: W / 2 + Math.sin(t * 0.04) * W * 0.32,
+              y: H * 0.82,
+              vy: -3.5,
+            });
+          bullets.forEach((b) => (b.y += b.vy));
+          bullets = bullets.filter((b) => b.y > -10);
+          const dx = Math.sin(t * 0.018) * W * 0.08;
+          x.fillStyle = "#040414";
+          x.fillRect(0, 0, W, H);
+          // stars
+          if (t === 1)
+            for (let i = 0; i < 30; i++) {
+              x.fillStyle = `rgba(200,210,255,${Math.random() * 0.4 + 0.1})`;
+              x.beginPath();
+              x.arc(
+                Math.random() * W,
+                Math.random() * H,
+                Math.random() * 0.8 + 0.3,
+                0,
+                Math.PI * 2,
+              );
+              x.fill();
+            }
+          aliens.forEach((a, i) => {
+            const ax = a.x + dx,
+              col = a.r === 0 ? "#ff5544" : a.r === 1 ? "#ff9944" : "#44aaff";
+            x.fillStyle = col;
+            x.shadowColor = col;
+            x.shadowBlur = 4;
+            x.fillRect(ax - 7, a.y - 4, 14, 8);
+            x.fillRect(ax - 5, a.y - 8, 4, 5);
+            x.fillRect(ax + 1, a.y - 8, 4, 5);
+            x.fillRect(ax - 9, a.y, 4, 4);
+            x.fillRect(ax + 5, a.y, 4, 4);
+            x.shadowBlur = 0;
+          });
+          x.fillStyle = "#00ee88";
+          x.shadowColor = "#00ee88";
+          x.shadowBlur = 8;
+          x.fillRect(
+            W / 2 + Math.sin(t * 0.04) * W * 0.32 - 11,
+            H * 0.82,
+            22,
+            8,
+          );
+          x.shadowBlur = 0;
+          x.fillStyle = "#ffff66";
+          x.shadowColor = "#ffff88";
+          x.shadowBlur = 5;
+          bullets.forEach((b) => x.fillRect(b.x - 2, b.y - 5, 4, 10));
+          x.shadowBlur = 0;
+          requestAnimationFrame(tick);
+        }
+        tick();
+      })();
+
+      // ── TTT preview ──
+      (function () {
+        const res = initCanvas("tttPrev");
+        if (!res) return;
+        const [c, x] = res;
+        const W = c.width,
+          H = c.height;
+        const MOVES = [
+          { r: 1, c: 1, p: 1 },
+          { r: 0, c: 0, p: 2 },
+          { r: 0, c: 2, p: 1 },
+          { r: 2, c: 0, p: 2 },
+          { r: 2, c: 2, p: 1 },
+        ];
+        let board = [
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+          ],
+          mi = 0,
+          t = 0,
+          pause = 50;
+        const mg = 16,
+          top = H * 0.1,
+          sq = (Math.min(W, H) * 0.85) / 3;
+        const ox = (W - sq * 3) / 2;
+        function tick() {
+          t++;
+          if (pause > 0) pause--;
+          else if (mi < MOVES.length) {
+            const m = MOVES[mi];
+            board[m.r][m.c] = m.p;
+            mi++;
+            pause = mi === MOVES.length ? 110 : 42;
+          } else {
+            board = [
+              [0, 0, 0],
+              [0, 0, 0],
+              [0, 0, 0],
+            ];
+            mi = 0;
+            pause = 60;
+          }
+          // bg
+          x.fillStyle = "#040c20";
+          x.fillRect(0, 0, W, H);
+          // board bg
+          x.fillStyle = "#0a1a40";
+          if (x.roundRect)
+            (x.beginPath(),
+              x.roundRect(ox - 2, top - 2, sq * 3 + 4, sq * 3 + 4, 8),
+              x.fill());
+          // grid lines
+          x.strokeStyle = "#1a3080";
+          x.lineWidth = 2;
+          for (let i = 1; i < 3; i++) {
+            x.beginPath();
+            x.moveTo(ox, top + i * sq);
+            x.lineTo(ox + sq * 3, top + i * sq);
+            x.stroke();
+            x.beginPath();
+            x.moveTo(ox + i * sq, top);
+            x.lineTo(ox + i * sq, top + sq * 3);
+            x.stroke();
+          }
+          x.lineCap = "round";
+          for (let r = 0; r < 3; r++)
+            for (let ci = 0; ci < 3; ci++) {
+              const px = ox + ci * sq,
+                py = top + r * sq,
+                sp = sq * 0.22;
+              if (board[r][ci] === 1) {
+                x.strokeStyle = "#ff3c6e";
+                x.lineWidth = Math.max(2, sq * 0.15);
+                x.beginPath();
+                x.moveTo(px + sp, py + sp);
+                x.lineTo(px + sq - sp, py + sq - sp);
+                x.stroke();
+                x.beginPath();
+                x.moveTo(px + sp, py + sq - sp);
+                x.lineTo(px + sq - sp, py + sp);
+                x.stroke();
+              } else if (board[r][ci] === 2) {
+                x.strokeStyle = "#4d8fff";
+                x.lineWidth = Math.max(2, sq * 0.1);
+                x.beginPath();
+                x.arc(px + sq / 2, py + sq / 2, sq * 0.28, 0, Math.PI * 2);
+                x.stroke();
+              }
+            }
+          requestAnimationFrame(tick);
+        }
+        tick();
+      })();
+    </script>
+  </body>
+</html>
