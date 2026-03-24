@@ -3,7 +3,7 @@ from js import document, window
 from pyodide.ffi import create_proxy
 
 from tictactoe_core import (
-    trained_models, check_win, is_draw, get_ai_move
+    trained_models, check_win, is_draw, get_ai_move, LEVEL_NOISE
 )
 
 # ── Canvas ───────────────────────────────────────────────────────────────
@@ -312,7 +312,8 @@ async def game_loop():
             draw()
             await asyncio.sleep(0.55)
             model = trained_models.get(current_difficulty, trained_models["even"])
-            move  = get_ai_move(board, model, get_ai_player())
+            noise = LEVEL_NOISE.get(current_difficulty, 0.35)
+            move  = get_ai_move(board, model, get_ai_player(), noise=noise)
             if move:
                 board[move[0]][move[1]] = get_ai_player()
                 speak("AI plays.")

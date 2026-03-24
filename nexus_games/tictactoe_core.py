@@ -123,7 +123,7 @@ def train_step(model, X, Y, lr=0.005):
 # ── Shared model registry ────────────────────────────────────────────────
 trained_models = {}
 for lvl in ["rookie", "easy", "even", "hard", "expert"]:
-    trained_models[lvl] = TicTacToeNN(hidden=64)
+    trained_models[lvl] = TicTacToeNN(hidden=128)
 
 # ── Game logic ───────────────────────────────────────────────────────────
 def check_win(board, player):
@@ -137,7 +137,7 @@ def check_win(board, player):
 def is_draw(board):
     return all(board[r][c] != 0 for r in range(3) for c in range(3))
 
-def get_ai_move(board, model, ai_player):
+def get_ai_move(board, model, ai_player, noise=0.0):
     human = 3 - ai_player
     flat = np.array([
         1 if board[r][c]==ai_player else (-1 if board[r][c]==human else 0)
@@ -152,5 +152,8 @@ def get_ai_move(board, model, ai_player):
         empty = [(r,c) for r in range(3) for c in range(3) if board[r][c] == 0]
         return random.choice(empty) if empty else None
     probs /= total
-    idx = np.random.choice(9, p=probs)
+    if noise > 0 and random.random() < noise:
+        idx = np.random.choice(9, p=probs)
+    else:
+        idx = int(np.argmax(probs))
     return divmod(idx, 3)

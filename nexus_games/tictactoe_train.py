@@ -26,12 +26,12 @@ async def do_train(e):
     log_el.textContent = f"Generating {level} dataset..."
     await asyncio.sleep(0.05)
 
-    X, Y = generate_dataset(noise, n_games=400)
-    model = TicTacToeNN(hidden=64)
+    X, Y = generate_dataset(noise, n_games=800)
+    model = TicTacToeNN(hidden=128)
     log_el.textContent = f"Training {level} — {len(X)} samples, {epochs} epochs\n"
 
-    batch = 128
-    lr    = 0.005
+    batch = 64
+    lr    = 0.01
     for ep in range(epochs):
         idx = np.random.permutation(len(X))
         X, Y = X[idx], Y[idx]
